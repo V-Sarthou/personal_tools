@@ -4,8 +4,8 @@ import sys
 import os
 import glob
 import subprocess
+import eyed3
 
-#src_root = os.path.dirname(os.path.realpath(__file__))
 src_root = os.getcwd()
 dst_root = os.path.join("C:\\", "Users", "Valentin", "Music", "forUSB")
 g_convert_to_mp3 = True
@@ -14,6 +14,7 @@ g_overwrite_covers = True
 g_resize_only = False
 g_use_old_convert_method = False
 fixed_dims = [250, 232]
+front_cover_filename = "Folder.jpg"
 
 fixed_ratio = float(fixed_dims[0]) / float(fixed_dims[1])
 fixed_ratio_sqrd = fixed_ratio * fixed_ratio
@@ -92,7 +93,7 @@ def resize_only_image(file, dest_file):
 def all_covers_in(path):
   for root, dirs, files in os.walk(path):
     for filename in files:
-      if filename.endswith("Folder.jpg"):
+      if filename.endswith(front_cover_filename):
         yield os.path.join(root, filename)
 
 def get_dest_cover_file(file):
@@ -123,12 +124,41 @@ def all_songs_in(path):
         yield os.path.join(root, filename)
 
 
-search_dir = os.path.abspath(sys.argv[1])
+def setup_tags(mp3_path):
+  audiofile = eyed3.load(mp3_path)
 
-# Convert to mp3
-if g_convert_to_mp3:
-  for song in all_songs_in(search_dir):
-    convert_to_mp3(song, get_dest_song_file(song))
+  artist = audiofile.tag.artist
+  album = audiofile.tag.album
+  title = audiofile.tag.title
+  track_num = audiofile.tag.track_num[0]
+  date = audiofile.tag.getBestDate()
+  genre = audiofile.tag.genre
+
+  audiofile.tag.clear()
+
+  # Setup ID3V1 tags
+  audiofile.initTag(version=(1, 1, 0))
+  audiofile.tag.artist = artist
+  audiofile.tag.album = album
+  audiofile.tag.title = title
+  audiofile.tag.track_num = int(track_num)
+  audiofile.tag.release_date = date
+  audiofile.tag.genre = genre
+  audiofile.tag.save()
+
+  # Setup ID3V2.3 tags
+  audiofile.initTag(version=(2, 3, 0))
+  audiofile.tag.artist = artist
+  audiofile.tag.album = album
+  audiofile.tag.title = title
+  audiofile.tag.track_num = track_num
+  audiofile.tag.recording_date = date
+  audiofile.tag.genre = genre
+  audiofile.tag.images.set(eyed3.id3.frames.ImageFrame.FRONT_COVER, open(os.path.join(os.path.dirname(mp3_path), front_cover_filename), 'rb').read(), 'image/jpeg')
+  audiofile.tag.save()
+
+
+search_dir = os.path.abspath(sys.argv[1])
 
 # Generate thumbnails
 if g_gen_covers:
@@ -141,3 +171,10 @@ if g_gen_covers:
         resize_image_OLD(cover, dest_cover_file)
       else:
         resize_image(cover, dest_cover_file, get_new_dims(image_dims(cover)))
+
+# Convert to mp3
+if g_convert_to_mp3:
+  for song in all_songs_in(search_dir):
+    dest_song = get_dest_song_file(song)
+    convert_to_mp3(song, dest_song)
+    setup_tags(dest_song)
