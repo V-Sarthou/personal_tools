@@ -6,6 +6,7 @@ import os
 import time
 import sys
 import subprocess
+import ssl
 
 url_pattern = "https://vs34.userscontent.net/dash/609473/fragment-{i}-f2-v1-x3.m4s"
 range_vals = [1, 271]
@@ -25,6 +26,7 @@ index_range = range(range_vals[0], range_vals[1] + 1)
 for i in index_range:
   file_list.append("{dir}/{file}".format(dir=dir, file=file_pattern.format(i=i)))
 
+context = ssl._create_unverified_context()
 do_download = True
 if do_download:
   init_dir(os.path.join(cwd, dir))
@@ -38,7 +40,7 @@ if do_download:
     download_num_tries = 0
     while not download_ok:
       try:
-        with urllib.request.urlopen(url) as response, open(local_file, 'wb') as out_file:
+        with urllib.request.urlopen(url, context=context) as response, open(local_file, 'wb') as out_file:
           shutil.copyfileobj(response, out_file)
       except TimeoutError:
         print("Could not download file. Retrying...")
