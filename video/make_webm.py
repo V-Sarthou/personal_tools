@@ -8,6 +8,9 @@ import os
 import subprocess
 import glob
 from threading import Thread
+import playsound
+
+completion_sound_file = "C:/Windows/Media/tada.wav"
 
 advanced_options = False
 
@@ -268,12 +271,15 @@ class WebmMakerApp(tk.Tk):
     if os.path.isfile(self.output.get()):
       os.remove(self.output.get())
 
+    success = True
+
     for cmd in cmds:
       print(' '.join(cmd))
       sys.stdout.flush()
       self.conversion_process = subprocess.Popen(cmd)
       ret = self.conversion_process.wait()
       if ret != 0:
+        success = False
         break
     self.conversion_process = None
 
@@ -284,6 +290,8 @@ class WebmMakerApp(tk.Tk):
     self.make_button.configure(state='normal')
     self.abort_button.configure(state='disabled')
     self.output_message_val.set("Ready")
+    if success:
+      playsound.playsound(completion_sound_file)
 
   def launch_makewebm(self):
     Thread(target=self.run_makewebm, args=([self.gen_cmd(1), self.gen_cmd(2)],)).start()
