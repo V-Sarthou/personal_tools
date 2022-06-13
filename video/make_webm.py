@@ -16,6 +16,7 @@ class WebmMakerApp(tk.Tk):
     tk.Tk.__init__(self)
     rand_vec = os.urandom(4)
     self.rand_num = "%d%d%d%d" % (rand_vec[0], rand_vec[1],rand_vec[2],rand_vec[3])
+    self.conversion_process = None
     self.title("WebM Maker")
     self.geometry("720x420")
     self.create_widgets()
@@ -191,7 +192,10 @@ class WebmMakerApp(tk.Tk):
     # Make Button
     self.rowconfigure(cur_row, weight=1)
     self.make_button = tk.Button(self, text="Make WebM!", command=self.launch_makewebm)
-    self.make_button.grid(column=0, row=cur_row, columnspan=4, sticky='NSEW')
+    self.make_button.grid(column=0, row=cur_row, columnspan=3, sticky='NSEW')
+    self.abort_button = tk.Button(self, text="X", command=self.abort_conversion)
+    self.abort_button.grid(column=3, row=cur_row, sticky='NSEW')
+    self.abort_button.configure(state='disabled')
     cur_row += 1
 
     # Log Output
@@ -257,6 +261,7 @@ class WebmMakerApp(tk.Tk):
 
   def run_makewebm(self, cmds):
     self.make_button.configure(state='disabled')
+    self.abort_button.configure(state='normal')
     self.output_message_val.set("Generating WebM...")
 
     # Remove output file if it already exists
@@ -266,18 +271,26 @@ class WebmMakerApp(tk.Tk):
     for cmd in cmds:
       print(' '.join(cmd))
       sys.stdout.flush()
-      subprocess.call(cmd)
+      self.conversion_process = subprocess.Popen(cmd)
+      ret = self.conversion_process.wait()
+      if ret != 0:
+        break
+    self.conversion_process = None
 
     for logfile in glob.glob(os.path.join(os.getcwd(), 'tmp_passlogfile_{rand_num}*.log'.format(rand_num=self.rand_num))):
       print("Removing {logfile}".format(logfile=logfile))
       os.remove(logfile)
 
     self.make_button.configure(state='normal')
+    self.abort_button.configure(state='disabled')
     self.output_message_val.set("Ready")
 
   def launch_makewebm(self):
     Thread(target=self.run_makewebm, args=([self.gen_cmd(1), self.gen_cmd(2)],)).start()
 
+  def abort_conversion(self):
+    if (self.conversion_process):
+      self.conversion_process.terminate()
 
 if __name__ == "__main__":
   webm_app = WebmMakerApp()
