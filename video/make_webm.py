@@ -14,6 +14,8 @@ advanced_options = False
 class WebmMakerApp(tk.Tk):
   def __init__(self):
     tk.Tk.__init__(self)
+    rand_vec = os.urandom(4)
+    self.rand_num = "%d%d%d%d" % (rand_vec[0], rand_vec[1],rand_vec[2],rand_vec[3])
     self.title("WebM Maker")
     self.geometry("720x420")
     self.create_widgets()
@@ -227,7 +229,7 @@ class WebmMakerApp(tk.Tk):
       '-qmin', str(self.qmin_val.get()),
       '-qmax', str(self.qmax_val.get()),
       '-crf', str(self.crf.get()),
-      '-passlogfile', 'tmp_passlogfile',
+      '-passlogfile', 'tmp_passlogfile_{rand_num}'.format(rand_num=self.rand_num),
       '-pass', str(pass_num),
       '-b:v', '50M'
     ])
@@ -266,7 +268,7 @@ class WebmMakerApp(tk.Tk):
       sys.stdout.flush()
       subprocess.call(cmd)
 
-    for logfile in glob.glob(os.path.join(os.getcwd(), 'tmp_passlogfile*.log')):
+    for logfile in glob.glob(os.path.join(os.getcwd(), 'tmp_passlogfile_{rand_num}*.log'.format(rand_num=self.rand_num))):
       print("Removing {logfile}".format(logfile=logfile))
       os.remove(logfile)
 
