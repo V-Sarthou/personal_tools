@@ -150,6 +150,19 @@ class WebmMakerApp(tk.Tk):
       self.qmax.grid(column=2, row=cur_row, columnspan=2, sticky='EW')
       cur_row += 1
 
+    # Deadline
+    self.selected_deadline = tk.StringVar()
+    self.rowconfigure(cur_row, weight=1)
+    self.deadline_label = tk.Label(self, text="Deadline")
+    self.deadline_label.grid(column=0, row=cur_row, sticky='W')
+    self.deadline_good = tk.Radiobutton(self, text='Good', value='good', variable=self.selected_deadline)
+    self.deadline_good.grid(column=1, row=cur_row, sticky='EW')
+    self.deadline_best = tk.Radiobutton(self, text='Best', value='best', variable=self.selected_deadline)
+    self.deadline_best.grid(column=2, row=cur_row, columnspan=2, sticky='EW')
+    self.deadline_best.deselect()
+    self.deadline_good.select()
+    cur_row += 1
+
     # CRF
     self.rowconfigure(cur_row, weight=1)
     self.crf_label = tk.Label(self, text="CRF")
@@ -230,7 +243,7 @@ class WebmMakerApp(tk.Tk):
 
     cmd.extend([
       '-c:v', 'libvpx',
-      '-deadline', 'good',
+      '-deadline', self.selected_deadline.get(),
       '-cpu-used', '0',
       '-qcomp', '1',
       '-slices', '1',
