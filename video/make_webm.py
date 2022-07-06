@@ -243,7 +243,7 @@ class WebmMakerApp(tk.Tk):
       '-crf', str(self.crf.get()),
       '-passlogfile', 'tmp_passlogfile_{rand_num}'.format(rand_num=self.rand_num),
       '-pass', str(pass_num),
-      '-b:v', '50M'
+      '-b:v', '0'
     ])
 
     if pass_num == 2 and self.audio_enabled.get():
