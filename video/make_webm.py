@@ -25,7 +25,10 @@ class WebmMakerApp(tk.Tk):
     self.create_widgets()
 
   def open_file(self):
-    self.input_val.set(tk.filedialog.askopenfilename(initialdir=os.getcwd()))
+    input_file = tk.filedialog.askopenfilename(initialdir=os.getcwd())
+    self.input_val.set(input_file)
+    self.output_val.set(os.path.join(os.path.dirname(self.output.get()),
+                                     "%s.webm" % os.path.splitext(os.path.basename(input_file))[0]).replace(os.sep, '/'))
 
   def save_file(self):
     self.output.insert(0, tk.filedialog.asksaveasfilename(initialdir=os.getcwd(), filetypes=[('WebM files', '*.webm')]))
