@@ -242,7 +242,7 @@ class WebmMakerApp(tk.Tk):
       cmd.append(','.join(filters))
 
     cmd.extend([
-      '-c:v', 'libvpx',
+      '-c:v', 'libvpx-vp9',
       '-deadline', self.selected_deadline.get(),
       '-cpu-used', '0',
       '-qcomp', '1',
