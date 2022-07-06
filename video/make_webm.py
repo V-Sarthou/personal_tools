@@ -31,7 +31,7 @@ class WebmMakerApp(tk.Tk):
                                      "%s.webm" % os.path.splitext(os.path.basename(input_file))[0]).replace(os.sep, '/'))
 
   def save_file(self):
-    self.output.insert(0, tk.filedialog.asksaveasfilename(initialdir=os.getcwd(), filetypes=[('WebM files', '*.webm')]))
+    self.output_val.set(tk.filedialog.asksaveasfilename(initialdir=os.getcwd(), filetypes=[('WebM files', '*.webm')]))
 
   def update_width_height_state(self):
     if self.video_width_height_enabled.get():
