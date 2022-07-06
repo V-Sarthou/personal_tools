@@ -263,7 +263,7 @@ class WebmMakerApp(tk.Tk):
     if pass_num == 1:
       cmd.extend(['-f', 'null', 'NUL'])
     else:
-      cmd.append(self.output.get())
+      cmd.extend(['-f', 'webm', self.output.get()])
 
     return cmd
 
