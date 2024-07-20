@@ -11,6 +11,7 @@ from threading import Thread
 import playsound
 
 completion_sound_file = "C:/Windows/Media/tada.wav"
+error_sound_file = "C:/Windows/Media/chord.wav"
 
 advanced_options = False
 
@@ -26,9 +27,10 @@ class WebmMakerApp(tk.Tk):
 
   def open_file(self):
     input_file = tk.filedialog.askopenfilename(initialdir=os.getcwd())
-    self.input_val.set(input_file)
-    self.output_val.set(os.path.join(os.path.dirname(self.output.get()),
-                                     "%s.webm" % os.path.splitext(os.path.basename(input_file))[0]).replace(os.sep, '/'))
+    if input_file:
+      self.input_val.set(input_file)
+      self.output_val.set(os.path.join(os.path.dirname(self.output.get()),
+                                       "%s.webm" % os.path.splitext(os.path.basename(input_file))[0]).replace(os.sep, '/'))
 
   def save_file(self):
     self.output_val.set(tk.filedialog.asksaveasfilename(initialdir=os.getcwd(), filetypes=[('WebM files', '*.webm')]))
@@ -80,7 +82,7 @@ class WebmMakerApp(tk.Tk):
     self.input_label.grid(column=0, row=cur_row, sticky='W')
     self.input_val = tk.StringVar()
     self.input = tk.Entry(self, textvariable=self.input_val)
-    self.input.grid(column=1, row=0, columnspan=2, sticky='EW')
+    self.input.grid(column=1, row=cur_row, columnspan=2, sticky='EW')
     self.input_browse = tk.Button(self, text="...", command=self.open_file)
     self.input_browse.grid(column=3, row=cur_row, sticky='EW')
     cur_row += 1
@@ -127,6 +129,15 @@ class WebmMakerApp(tk.Tk):
     self.update_crop_state()
     cur_row += 1
 
+    # User Extra Filters
+    self.rowconfigure(cur_row, weight=1)
+    self.extra_filters_label = tk.Label(self, text="Extra Filters")
+    self.extra_filters_label.grid(column=0, row=cur_row, sticky='W')
+    self.extra_filters_val = tk.StringVar()
+    self.extra_filters = tk.Entry(self, textvariable=self.extra_filters_val)
+    self.extra_filters.grid(column=1, row=cur_row, columnspan=3, sticky='EW')
+    cur_row += 1
+
     self.num_threads_val = tk.IntVar(value=1)
     self.qmin_val = tk.IntVar(value=0)
     self.qmax_val = tk.IntVar(value=63)
@@ -149,6 +160,19 @@ class WebmMakerApp(tk.Tk):
       self.qmax = tk.Scale(self, orient='horizontal', from_=0, to=63, variable=self.qmax_val)
       self.qmax.grid(column=2, row=cur_row, columnspan=2, sticky='EW')
       cur_row += 1
+
+    # Format
+    self.selected_format = tk.StringVar()
+    self.rowconfigure(cur_row, weight=1)
+    self.format_label = tk.Label(self, text="Format")
+    self.format_label.grid(column=0, row=cur_row, sticky='W')
+    self.format_vp8 = tk.Radiobutton(self, text='VP8', value='vp8', variable=self.selected_format)
+    self.format_vp8.grid(column=1, row=cur_row, sticky='EW')
+    self.format_vp9 = tk.Radiobutton(self, text='VP9', value='vp9', variable=self.selected_format)
+    self.format_vp9.grid(column=2, row=cur_row, columnspan=2, sticky='EW')
+    self.format_vp8.deselect()
+    self.format_vp9.select()
+    cur_row += 1
 
     # Deadline
     self.selected_deadline = tk.StringVar()
@@ -227,7 +251,9 @@ class WebmMakerApp(tk.Tk):
   def gen_cmd(self, pass_num):
     cmd = ['ffmpeg', '-i', self.input.get()]
 
-    if self.video_width_height_enabled.get() or self.video_crop_enabled.get():
+    print(self.extra_filters_val.get())
+
+    if self.video_width_height_enabled.get() or self.video_crop_enabled.get() or self.extra_filters_val.get():
       cmd.append('-vf')
       filters = []
       if self.video_crop_enabled.get():
@@ -239,10 +265,18 @@ class WebmMakerApp(tk.Tk):
         ))
       if self.video_width_height_enabled.get():
         filters.append('scale={width}:{height}'.format(width=self.video_width.get(), height=self.video_height.get()))
+      if self.extra_filters_val.get():
+        filters.append(self.extra_filters_val.get())
       cmd.append(','.join(filters))
 
+    format_libs = {
+      'vp8': 'libvpx',
+      'vp9': 'libvpx-vp9'
+    }
+
     cmd.extend([
-      '-c:v', 'libvpx-vp9',
+      '-pix_fmt', 'yuv420p',
+      '-c:v', format_libs[self.selected_format.get()],
       '-deadline', self.selected_deadline.get(),
       '-cpu-used', '0',
       '-qcomp', '1',
@@ -256,14 +290,20 @@ class WebmMakerApp(tk.Tk):
       '-crf', str(self.crf.get()),
       '-passlogfile', 'tmp_passlogfile_{rand_num}'.format(rand_num=self.rand_num),
       '-pass', str(pass_num),
-      '-b:v', '0'
+      '-b:v', '0' if (self.selected_format.get() == 'vp9') else '50M'
     ])
 
     if pass_num == 2 and self.audio_enabled.get():
-      cmd.extend([
-        '-c:a', 'libvorbis',
-        '-qscale:a', str(self.qaudio.get()),
-      ])
+      if self.selected_format.get() == 'vp9':
+        cmd.extend([
+          '-c:a', 'libopus',
+          '-b:a', '%d' % (self.qaudio.get() * 51200),
+        ])
+      else:
+        cmd.extend([
+          '-c:a', 'libvorbis',
+          '-qscale:a', str(self.qaudio.get()),
+        ])
     else:
       cmd.append('-an')
 
@@ -281,13 +321,17 @@ class WebmMakerApp(tk.Tk):
     return cmd
 
   def run_makewebm(self, cmds):
+    # Remove output file if it already exists
+    if os.path.isfile(self.output.get()):
+      try:
+        os.remove(self.output.get())
+      except:
+        print("Could not delete {output_file}. Aborting conversion.".format(output_file=self.output.get()))
+        return
+
     self.make_button.configure(state='disabled')
     self.abort_button.configure(state='normal')
     self.output_message_val.set("Generating WebM...")
-
-    # Remove output file if it already exists
-    if os.path.isfile(self.output.get()):
-      os.remove(self.output.get())
 
     success = True
 
@@ -308,8 +352,7 @@ class WebmMakerApp(tk.Tk):
     self.make_button.configure(state='normal')
     self.abort_button.configure(state='disabled')
     self.output_message_val.set("Ready")
-    if success:
-      playsound.playsound(completion_sound_file)
+    playsound.playsound(completion_sound_file if success else error_sound_file)
 
   def launch_makewebm(self):
     Thread(target=self.run_makewebm, args=([self.gen_cmd(1), self.gen_cmd(2)],)).start()
