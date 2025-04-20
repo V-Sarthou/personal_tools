@@ -29,8 +29,9 @@ def all_songs_in(path):
       if filename.endswith(".m4a"):
         yield os.path.join(root, filename)
 
-
-search_dir = os.path.abspath(sys.argv[1])
+search_dir = os.getcwd()
+if len(sys.argv) > 1:
+  search_dir = os.path.abspath(sys.argv[1])
 
 for song in all_songs_in(search_dir):
   convert_to_flac(song, get_dest_song_file(song))
