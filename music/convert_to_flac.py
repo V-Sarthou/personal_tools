@@ -14,9 +14,9 @@ def file_exists(file):
 
 def convert_to_flac(file, dest_file):
   if file_exists(dest_file):
-    print "%s already exists" % dest_file
+    print("%s already exists" % dest_file)
   else:
-    print "Writing %s" % dest_file
+    print("Writing {f}".format(f=dest_file).encode("utf8"))
     sys.stdout.flush()
     subprocess.call(["ffmpeg", "-i", file, "-compression_level", "12", dest_file])
 

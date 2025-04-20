@@ -58,9 +58,9 @@ corrected_height = int((float(fixed_dims[0]) * float(fixed_dims[0]) / float(fixe
 def resize_image_OLD(file, dest_file):
     init_dir(os.path.dirname(dest_file))
     if not g_overwrite_covers and file_exists(dest_file):
-        print("%s already exists" % dest_file)
+        print("{f} already exists".format(f=dest_file).encode('utf8'))
     else:
-        print("Writing %s" % dest_file)
+        print("Writing {f}".format(f=dest_file).encode('utf8'))
         sys.stdout.flush()
         subprocess.call(["magick", "convert", file,
                          "-resize", "%dx%d!" % (fixed_dims[1], fixed_dims[1]),
@@ -74,9 +74,9 @@ def resize_image_OLD(file, dest_file):
 def resize_image(file, dest_file, new_dims):
     init_dir(os.path.dirname(dest_file))
     if not g_overwrite_covers and file_exists(dest_file):
-        print("%s already exists" % dest_file)
+        print("{f} already exists".format(f=dest_file).encode('utf8'))
     else:
-        print("Writing %s" % dest_file)
+        print("Writing {f}".format(f=dest_file).encode('utf8'))
         sys.stdout.flush()
         subprocess.call(["magick", "convert", file,
                          "-resize", "%dx%d!" % (new_dims[0], new_dims[1]),
@@ -90,9 +90,9 @@ def resize_image(file, dest_file, new_dims):
 def resize_only_image(file, dest_file):
     init_dir(os.path.dirname(dest_file))
     if not g_overwrite_covers and file_exists(dest_file):
-        print("%s already exists" % dest_file)
+        print("{f} already exists".format(f=dest_file).encode('utf8'))
     else:
-        print("Writing %s" % dest_file)
+        print("Writing {f}".format(f=dest_file).encode('utf8'))
         sys.stdout.flush()
         subprocess.call(["magick", "convert", file,
                          "-resize", "%dx%d!" % (300, 300),
@@ -116,9 +116,9 @@ def get_dest_cover_file(file):
 def convert_to_mp3(file, dest_file):
     init_dir(os.path.dirname(dest_file))
     if file_exists(dest_file):
-        print("%s already exists" % dest_file)
+        print("{f} already exists".format(f=dest_file).encode('utf8'))
     else:
-        print("Writing %s" % dest_file)
+        print("Writing {f}".format(f=dest_file).encode('utf8'))
         sys.stdout.flush()
         subprocess.call(["ffmpeg", "-i", file, "-b:a", "320k", dest_file])
 
