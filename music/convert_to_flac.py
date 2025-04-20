@@ -18,7 +18,7 @@ def convert_to_flac(file, dest_file):
   else:
     print("Writing {f}".format(f=dest_file).encode("utf8"))
     sys.stdout.flush()
-    subprocess.call(["ffmpeg", "-i", file, "-compression_level", "12", dest_file])
+    subprocess.call(["ffmpeg", "-i", file, "-compression_level", "5", dest_file])
 
 def get_dest_song_file(file):
   return "%s.flac" % os.path.splitext(file)[0]
