@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(GraphicsLab VERSION 0.1.0 LANGUAGES C)
+project(GraphicsLab VERSION 0.1.0 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 include(FetchContent)
@@ -40,3 +40,6 @@ FetchContent_MakeAvailable(glfw)
 
 add_executable(gl_tex_format_conversions src/gl_tex_format_conversions.c)
 target_link_libraries(gl_tex_format_conversions PRIVATE glad_gl_core_46 glfw)
+
+add_executable(BufferConverterTest src/BufferConverterTest.cxx)
+target_link_libraries(BufferConverterTest PRIVATE glad_gl_core_46)
