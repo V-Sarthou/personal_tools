@@ -133,7 +133,7 @@ def get_dest_song_file(file):
 def all_songs_in(path):
     for root, dirs, files in os.walk(path):
         for filename in files:
-            if filename.endswith(".flac"):
+            if filename.endswith(".flac") or filename.endswith(".opus") or filename.endswith(".m4a"):
                 yield os.path.join(root, filename)
 
 
